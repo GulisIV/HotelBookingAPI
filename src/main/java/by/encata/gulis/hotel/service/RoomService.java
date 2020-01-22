@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**user cannot book room for another day!!
 Change LocalDateTime to LocalTime??*/
@@ -53,8 +53,6 @@ public class RoomService {
     }
 
     //from and to already in UTC (convert in controller)
-    //check hotel work time
-    //throw  new RuntimeException("hotel is not working this time");
     private void checkHotelSchedule (LocalDateTime localDateTime) {
         DayOfWeek dayOfWeek = localDateTime.getDayOfWeek();
         LocalTime reserveTime = localDateTime.toLocalTime();
@@ -70,7 +68,9 @@ public class RoomService {
     }
 
     //from and to already in UTC (convert in controller)
-    private void checkIfRoomIsAvailable(Set<Reservation> roomReservations, LocalDateTime from, LocalDateTime to) {
+    private boolean isRoomAvailableByTime(List<Reservation> roomReservations, LocalDateTime from, LocalDateTime to) {
+        //user can book room only for 1 day max!
+        DayOfWeek reservationDay = from.getDayOfWeek();
         LocalTime startReservation = from.toLocalTime();
         LocalTime endReservation = to.toLocalTime();
 
@@ -78,13 +78,13 @@ public class RoomService {
             LocalTime existingCheckIn = checkReservation.getCheckIn().toLocalTime();
             LocalTime existingCheckOut = checkReservation.getCheckOut().toLocalTime();
 
-            if (!startReservation.isAfter(existingCheckOut) && !existingCheckIn.isAfter(endReservation)) {
-                throw new RoomIsBookedException("Room is booked for this time!");
+            if (reservationDay.equals(checkReservation.getCheckIn().getDayOfWeek())) {
+                if (!startReservation.isAfter(existingCheckOut) && !existingCheckIn.isAfter(endReservation)) {
+                    return false;
+                }
             }
         }
-/*        public static boolean isOverlapping(Date start1, Date end1, Date start2, Date end2) {
-            return !start1.after(end2) && !start2.after(end1);
-        }*/
+        return true;
     }
 
     public void addRoomReservation(ReservationDto reservationDto) {
@@ -92,7 +92,7 @@ public class RoomService {
         LocalDateTime from = reservationDto.getReservation().getCheckIn();
         LocalDateTime to = reservationDto.getReservation().getCheckOut();
 
-        if (from.isEqual(to)){
+        if (from.isEqual(to) || from.isAfter(to)){
             throw new InvalidReservingTime("Check reserving time!");
         }
 
@@ -100,16 +100,35 @@ public class RoomService {
         checkHotelSchedule(to);
 
         Room room = roomRepo.findByNumber(reservationDto.getRoomNumber());
-        Set<Reservation> roomReservations = room.getReservations();
+        List<Reservation> roomReservations = room.getReservations();
 
-        checkIfRoomIsAvailable(roomReservations, from, to);
+        if (!isRoomAvailableByTime(roomReservations, from, to)){
+            throw new RoomIsBookedException("Room is booked this time!");
+        }
 
         roomReservations.add(reservationDto.getReservation());
         room.setReservations(roomReservations);
     }
 
-    public Set<Room> findAvailableRoomsByTime (LocalDateTime from, LocalDateTime to){
-        return null;
+    public List<Room> findAvailableRoomsByTime (LocalDateTime from, LocalDateTime to){
+
+        if(from.isEqual(to) || from.isAfter(to)){
+            throw new InvalidReservingTime("Check reserving time!");
+        }
+
+        List<Room> allRooms = roomRepo.findAll();
+        List<Room> availableRooms = null;
+        for (Room room : allRooms){
+            List<Reservation> roomReservations = room.getReservations();
+            if(isRoomAvailableByTime(roomReservations, from, to)){
+                availableRooms.add(room);
+            }
+        }
+        return availableRooms;
+    }
+
+    public List<Room> findAllRooms (){
+        return roomRepo.findAll();
     }
 
 }

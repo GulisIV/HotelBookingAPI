@@ -14,11 +14,6 @@ import javax.validation.Valid;
 @RequestMapping("/registration")
 public class UserController {
 
-/*    private final UserRepo userRepo;
-
-    public UserController(UserRepo userRepo) {
-        this.userRepo = userRepo;
-    }*/
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -31,33 +26,8 @@ public class UserController {
     }
 
     @PostMapping
-    /*
-     * Change Map<> model to some object ErrorMessage etc.
-     */
-/*    public String addUser(@Valid User user, Map<String, Object> model) {
-
-        if(!userService.saveUser(user)){
-            model.put("message", "User exists!");
-            return "registration";
-        }
-
-        return "redirect:/login";*/
-       /* User userFromDb = userRepo.findByUsername(user.getUsername());
-
-        if (userFromDb != null) {
-            model.put("message", "User exists!");
-            return "registration";
-        }
-
-        user.setActive(true);
-        user.setRoles(Collections.singleton(Role.USER));
-        userRepo.save(user);
-
-        return "redirect:/login";
-    }*/
     public void addUser(@Valid User user) {
         userService.saveUser(user);
     }
-
 
 }

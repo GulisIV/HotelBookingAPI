@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 @Document(collection = "rooms")
 public class Room {
@@ -19,7 +19,7 @@ public class Room {
 //    @NotBlank(message = "You need to take some money for it")
     private BigDecimal price;
 
-    private Set<Reservation> reservations;
+    private List<Reservation> reservations;
 
     public Long getNumber() {
         return number;
@@ -53,11 +53,11 @@ public class Room {
         this.roomId = roomId;
     }
 
-    public Set<Reservation> getReservations() {
+    public List<Reservation> getReservations() {
         return reservations;
     }
 
-    public void setReservations(Set<Reservation> reservations) {
+    public void setReservations(List<Reservation> reservations) {
         this.reservations = reservations;
     }
 
