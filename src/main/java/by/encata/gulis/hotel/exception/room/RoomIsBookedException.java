@@ -1,4 +1,4 @@
-package by.encata.gulis.hotel.exception;
+package by.encata.gulis.hotel.exception.room;
 
 public class RoomIsBookedException extends RuntimeException {
 

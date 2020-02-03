@@ -1,8 +1,7 @@
 package by.encata.gulis.hotel.service;
 
-import by.encata.gulis.hotel.domain.Role;
 import by.encata.gulis.hotel.domain.User;
-import by.encata.gulis.hotel.exception.UserException;
+import by.encata.gulis.hotel.exception.user.UserExistsException;
 import by.encata.gulis.hotel.repository.UserRepo;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -44,14 +44,15 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public void saveUser(User user) {
+    public void addUser(User user) {
         User userFromDb = userRepo.findByUsername(user.getUsername());
 
         if (userFromDb != null) {
-            throw new UserException("User " + user.getUsername() + " already exists!");
+            throw new UserExistsException("User " + user.getUsername() + " already exists!");
         }
 
-        user.setRole(String.valueOf(Role.USER));
+//        user.setRole(String.valueOf(Role.USER));
+        user.setUserZoneId(ZoneId.of("Europe/Minsk"));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepo.save(user);
     }

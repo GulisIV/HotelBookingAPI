@@ -4,10 +4,12 @@ import by.encata.gulis.hotel.domain.Reservation;
 import by.encata.gulis.hotel.domain.Room;
 import by.encata.gulis.hotel.domain.Schedule;
 import by.encata.gulis.hotel.domain.dto.ReservationDto;
-import by.encata.gulis.hotel.exception.HotelNotWorkingException;
-import by.encata.gulis.hotel.exception.InvalidReservingTime;
-import by.encata.gulis.hotel.exception.RoomException;
-import by.encata.gulis.hotel.exception.RoomIsBookedException;
+import by.encata.gulis.hotel.exception.hotel.HotelNotWorkingException;
+import by.encata.gulis.hotel.exception.hotel.InvalidScheduleTimeException;
+import by.encata.gulis.hotel.exception.hotel.ScheduleNotFoundException;
+import by.encata.gulis.hotel.exception.room.RoomExistsException;
+import by.encata.gulis.hotel.exception.room.RoomIsBookedException;
+import by.encata.gulis.hotel.exception.room.RoomNotFoundException;
 import by.encata.gulis.hotel.repository.RoomRepo;
 import by.encata.gulis.hotel.repository.ScheduleRepo;
 import org.springframework.stereotype.Service;
@@ -15,11 +17,15 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-/**user cannot book room for another day!!
-Change LocalDateTime to LocalTime??*/
+/**
+ * user cannot book room for another day!!
+ * Change LocalDateTime to LocalTime??
+ */
 @Service
 public class RoomService {
 
@@ -31,56 +37,62 @@ public class RoomService {
         this.scheduleRepo = scheduleRepo;
     }
 
-    public void saveRoom(Room room) {
+    public void addRoom(Room room) {
         Room roomFromDb = roomRepo.findByNumber(room.getNumber());
 
         if (roomFromDb != null) {
-            throw new RoomException("Room with such number already exists!");
+            throw new RoomExistsException("Room with such number already exists!");
         }
 
         roomRepo.save(room);
 
     }
 
-    public void deleteRoom (Long number){
+    public void deleteRoom(Long number) {
         Room roomFromDb = roomRepo.findByNumber(number);
 
-        if (roomFromDb != null){
-            roomRepo.delete(roomFromDb);
+        if (roomFromDb == null) {
+            throw new RoomNotFoundException("No room with such number!");
         }
+        roomRepo.delete(roomFromDb);
 
-        throw new RoomException("No room with such number!");
     }
 
-    //from and to already in UTC (convert in controller)
-    private void checkHotelSchedule (LocalDateTime localDateTime) {
-        DayOfWeek dayOfWeek = localDateTime.getDayOfWeek();
-        LocalTime reserveTime = localDateTime.toLocalTime();
-        //Optional?????
-        //use optional to code some logic for first schedule start? If there is no schedule?
-        //I can find day of week by int. enum dayOfWeek.getValue();
-        Optional<Schedule> optionalDaySchedule = scheduleRepo.findById(dayOfWeek);
-        Schedule daySchedule = optionalDaySchedule.orElseThrow();
-        if (reserveTime.getHour() < daySchedule.getOpenTime().getHour() &&
-                reserveTime.getMinute() < daySchedule.getOpenTime().getMinute()){
+    //from and to already in UTC (convert in integration)
+    private void checkHotelSchedule(DayOfWeek dayOfWeek, LocalTime from, LocalTime to) {
+        Schedule daySchedule = scheduleRepo.findById(dayOfWeek).orElseThrow(()
+                -> new ScheduleNotFoundException("Cannot find schedule for this day!"));
+
+        if(from.isBefore(daySchedule.getOpenTime()) && to.isAfter(daySchedule.getCloseTime())){
             throw new HotelNotWorkingException("Hotel is not working this time!");
         }
     }
 
-    //from and to already in UTC (convert in controller)
-    private boolean isRoomAvailableByTime(List<Reservation> roomReservations, LocalDateTime from, LocalDateTime to) {
+    //from and to already in UTC (convert in integration)
+    //this method is working incorrect!!! roomReservations null?
+    private boolean isRoomAvailableByTime(List<Reservation> roomReservations, DayOfWeek day, LocalTime from, LocalTime to) {
         //user can book room only for 1 day max!
-        DayOfWeek reservationDay = from.getDayOfWeek();
-        LocalTime startReservation = from.toLocalTime();
-        LocalTime endReservation = to.toLocalTime();
+        //method findByNumber may return empty, not null collection
+        if(roomReservations.isEmpty()){
+            return true;
+        }
 
         for (Reservation checkReservation : roomReservations) {
-            LocalTime existingCheckIn = checkReservation.getCheckIn().toLocalTime();
-            LocalTime existingCheckOut = checkReservation.getCheckOut().toLocalTime();
+            DayOfWeek reservationDay = checkReservation.getDay();
+            int numberOfReservations = roomReservations.size();
 
-            if (reservationDay.equals(checkReservation.getCheckIn().getDayOfWeek())) {
-                if (!startReservation.isAfter(existingCheckOut) && !existingCheckIn.isAfter(endReservation)) {
-                    return false;
+            if (reservationDay.equals(day)) {
+
+                LocalTime existingCheckIn = checkReservation.getCheckIn();
+                LocalTime existingCheckOut = checkReservation.getCheckOut();
+
+                if (!from.isAfter(existingCheckOut) && !existingCheckIn.isAfter(to)) {
+
+                    numberOfReservations--;
+
+                    if(numberOfReservations == 0) {
+                        return false;
+                    }
                 }
             }
         }
@@ -89,46 +101,79 @@ public class RoomService {
 
     public void addRoomReservation(ReservationDto reservationDto) {
 
-        LocalDateTime from = reservationDto.getReservation().getCheckIn();
-        LocalDateTime to = reservationDto.getReservation().getCheckOut();
+        DayOfWeek day = reservationDto.getReservation().getDay();
+        LocalTime from = reservationDto.getReservation().getCheckIn();
+        LocalTime to = reservationDto.getReservation().getCheckOut();
 
-        if (from.isEqual(to) || from.isAfter(to)){
-            throw new InvalidReservingTime("Check reserving time!");
+        if (from.equals(to) || from.isAfter(to)) {
+            throw new InvalidScheduleTimeException("Check reserving time!");
         }
 
-        checkHotelSchedule(from);
-        checkHotelSchedule(to);
+        checkHotelSchedule(day, from, to);
 
         Room room = roomRepo.findByNumber(reservationDto.getRoomNumber());
         List<Reservation> roomReservations = room.getReservations();
 
-        if (!isRoomAvailableByTime(roomReservations, from, to)){
+        if (!isRoomAvailableByTime(roomReservations, day, from, to)) {
             throw new RoomIsBookedException("Room is booked this time!");
         }
 
         roomReservations.add(reservationDto.getReservation());
         room.setReservations(roomReservations);
+        roomRepo.save(room);
     }
 
-    public List<Room> findAvailableRoomsByTime (LocalDateTime from, LocalDateTime to){
+    public void setRoomBreak(Long roomNumber, DayOfWeek day, LocalTime from, LocalTime to){
+        Reservation roomReservation = new Reservation();
+        roomReservation.setDay(day);
+        roomReservation.setCheckIn(from);
+        roomReservation.setCheckOut(to);
 
-        if(from.isEqual(to) || from.isAfter(to)){
-            throw new InvalidReservingTime("Check reserving time!");
+        List<Reservation> reservations = new ArrayList<>();
+        reservations.add(roomReservation);
+
+        Room room = roomRepo.findByNumber(roomNumber);
+        room.setReservations(reservations);
+    }
+
+    public List<Room> findAvailableRoomsByTime(DayOfWeek day, LocalTime from, LocalTime to) {
+
+        if (from.equals(to) || from.isAfter(to)) {
+            throw new InvalidScheduleTimeException("Check reserving time!");
         }
 
         List<Room> allRooms = roomRepo.findAll();
-        List<Room> availableRooms = null;
-        for (Room room : allRooms){
+        List<Room> availableRooms = new ArrayList<>();
+        for (Room room : allRooms) {
             List<Reservation> roomReservations = room.getReservations();
-            if(isRoomAvailableByTime(roomReservations, from, to)){
+            if (isRoomAvailableByTime(roomReservations, day, from, to)) {
                 availableRooms.add(room);
             }
+        }
+
+        if (availableRooms.isEmpty()){
+            throw new RoomNotFoundException("Cannot find suitable rooms!");
         }
         return availableRooms;
     }
 
-    public List<Room> findAllRooms (){
+    public List<Room> findAllRooms() {
         return roomRepo.findAll();
     }
+
+    public Room findByNumber(Long number){
+        return roomRepo.findByNumber(number);
+    }
+
+    //I need to take time in user time zone and return in UTC time zone
+/*    I don't need this method, cause user must book in hotel time, not his local time
+    and I decided that hotel it in UTC time zone
+    Or user is in one time zone with hotel*/
+    public LocalDateTime convertStringToUtcTime (String date) {
+        LocalDateTime ldt = LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
+        LocalTime.parse(date);
+        return LocalDateTime.from(ldt.atZone(ZoneId.of("UTC")));
+    }
+
 
 }

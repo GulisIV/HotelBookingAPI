@@ -1,41 +1,50 @@
 package by.encata.gulis.hotel.domain;
 
-import java.time.LocalDateTime;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 public class Reservation {
 
-    private Long userId;
+    private String userId;
 
-    /**
-     * store in UTC
-     */
-    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;
+/*    private LocalDateTime checkIn;
+    private LocalDateTime checkOut;*/
+    private DayOfWeek day;
+    private LocalTime checkIn;
+    private LocalTime checkOut;
 
     public Reservation() {
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public LocalDateTime getCheckIn() {
+    public DayOfWeek getDay() {
+        return day;
+    }
+
+    public void setDay(DayOfWeek day) {
+        this.day = day;
+    }
+
+    public LocalTime getCheckIn() {
         return checkIn;
     }
 
-    public void setCheckIn(LocalDateTime checkIn) {
+    public void setCheckIn(LocalTime checkIn) {
         this.checkIn = checkIn;
     }
 
-    public LocalDateTime getCheckOut() {
+    public LocalTime getCheckOut() {
         return checkOut;
     }
 
-    public void setCheckOut(LocalDateTime checkOut) {
+    public void setCheckOut(LocalTime checkOut) {
         this.checkOut = checkOut;
     }
 }

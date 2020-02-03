@@ -3,32 +3,28 @@ package by.encata.gulis.hotel.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotBlank;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-@Document
+@Document(collection = "schedule")
 public class Schedule {
 
-
-    private Long id;
-    //В новом API соответствующие классы
-    // java.time.LocalDate и java.time.LocalTime хранят чистые кортежи (yyyy,MM,dd) и (HH,mm,dd) соответственно,
-    // и никакой лишней информации или логики в этих классах нет.
-    // Также введен класс java.time.LocalDateTime который хранит оба кортежа.
     @Id
     private DayOfWeek day;
+
+    @NotBlank
     private LocalTime openTime;
+    @NotBlank
     private LocalTime closeTime;
 
     public Schedule() {
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+    public Schedule(DayOfWeek day, @NotBlank LocalTime openTime, @NotBlank LocalTime closeTime) {
+        this.day = day;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
     }
 
     public DayOfWeek getDay() {

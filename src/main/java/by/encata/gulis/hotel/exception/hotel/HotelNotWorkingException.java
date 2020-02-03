@@ -1,4 +1,4 @@
-package by.encata.gulis.hotel.exception;
+package by.encata.gulis.hotel.exception.hotel;
 
 public class HotelNotWorkingException extends RuntimeException {
 

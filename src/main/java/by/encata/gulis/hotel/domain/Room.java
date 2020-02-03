@@ -3,6 +3,7 @@ package by.encata.gulis.hotel.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,16 +11,29 @@ import java.util.List;
 public class Room {
 
     @Id
-    private String roomId;
+    private String id;
 
+    @NotNull
     private Long number;
 
-//    @NotBlank(message = "You need to place some beds")
-    private Byte numberOfBeds;
-//    @NotBlank(message = "You need to take some money for it")
+    @NotNull
+    private Integer numberOfBeds;
+
+    @NotNull
     private BigDecimal price;
 
     private List<Reservation> reservations;
+
+    public Room() {
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public Long getNumber() {
         return number;
@@ -29,11 +43,11 @@ public class Room {
         this.number = number;
     }
 
-    public Byte getNumberOfBeds() {
+    public Integer getNumberOfBeds() {
         return numberOfBeds;
     }
 
-    public void setNumberOfBeds(Byte numberOfBeds) {
+    public void setNumberOfBeds(Integer numberOfBeds) {
         this.numberOfBeds = numberOfBeds;
     }
 
@@ -43,14 +57,6 @@ public class Room {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
-    }
-
-    public String getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
     }
 
     public List<Reservation> getReservations() {

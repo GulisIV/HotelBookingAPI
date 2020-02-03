@@ -1,0 +1,12 @@
+3) Spring security configuration
+4) MVC configuration
+5) All entity validation
+7) Configure exceptions
+
+What to do with previous reservations when hotel work time is changed? Should we delete them or inform users somehow?
+
+User choose time in hotel timeZone, not in his timeZone!
+
+Login page? Spring MVC configure is enough?
+
+Add integration test to see all Beans

@@ -2,23 +2,25 @@ package by.encata.gulis.hotel.domain.dto;
 
 import by.encata.gulis.hotel.domain.Reservation;
 
+import javax.validation.constraints.NotBlank;
 import java.time.ZoneId;
 
 public class ReservationDto {
-
+    @NotBlank
     private Long roomNumber;
-    private Long userId;
+    @NotBlank
+    private String userId;
+    @NotBlank
     private Reservation reservation;
-    private ZoneId userZoneId;
+
 
     public ReservationDto() {
     }
 
-    public ReservationDto(Long roomNumber, Long userId, Reservation reservation, ZoneId userZoneId) {
+    public ReservationDto(Long roomNumber, String userId, Reservation reservation, ZoneId userZoneId) {
         this.roomNumber = roomNumber;
         this.userId = userId;
         this.reservation = reservation;
-        this.userZoneId = userZoneId;
     }
 
     public Long getRoomNumber() {
@@ -29,11 +31,11 @@ public class ReservationDto {
         this.roomNumber = roomNumber;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -45,11 +47,4 @@ public class ReservationDto {
         this.reservation = reservation;
     }
 
-    public ZoneId getUserZoneId() {
-        return userZoneId;
-    }
-
-    public void setUserZoneId(ZoneId userZoneId) {
-        this.userZoneId = userZoneId;
-    }
 }

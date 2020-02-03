@@ -3,31 +3,26 @@ package by.encata.gulis.hotel.controller;
 
 import by.encata.gulis.hotel.domain.User;
 import by.encata.gulis.hotel.service.UserService;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
-@Controller
+@RestController
 @RequestMapping("/registration")
-public class UserController {
+public class RegistrationController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public RegistrationController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping
-    public String registration() {
-        return "registration";
-    }
-
     @PostMapping
-    public void addUser(@Valid User user) {
-        userService.saveUser(user);
+    public User addUser(@Valid User user) {
+        userService.addUser(user);
+        return user;
     }
 
 }
