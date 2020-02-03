@@ -7,8 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface RoomRepo extends MongoRepository<Room, Long> {
-    Room findByRoomId (String roomId);
     Room findByNumber (Long number);
-    List<Room> findByNumberOfBeds (Byte numberOfBeds);
+    List<Room> findByNumberOfBeds (Integer numberOfBeds);
     List<Room> findByPrice (BigDecimal price);
 }
