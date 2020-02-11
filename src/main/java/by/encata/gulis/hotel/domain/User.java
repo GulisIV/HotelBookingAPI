@@ -29,6 +29,13 @@ public class User implements UserDetails {
     public User() {
     }
 
+    public User(String id, @NotBlank String username, @NotBlank String password, Set<Role> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.roles = roles;
+    }
+
     public String getId() {
         return id;
     }

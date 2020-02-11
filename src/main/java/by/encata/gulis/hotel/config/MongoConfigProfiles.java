@@ -11,6 +11,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,14 +32,15 @@ public class MongoConfigProfiles {
     public MongoTemplate mongoTemplate() throws Exception {
         MongoTemplate mongoTemplate = new MongoTemplate(mongoDbFactory());
 
-        User admin = new User();
-        admin.setUsername("hotelAdminTest");
-        admin.setPassword(passwordEncoder.encode("321"));
-        Set<Role> roles = new HashSet<>();
-        roles.add(Role.USER);
-        roles.add(Role.ADMIN);
-        admin.setRoles(roles);
+        String password = passwordEncoder.encode("321");
+        Set<Role> roles = new HashSet<>(Arrays.asList(Role.USER, Role.ADMIN));
+        User admin = new User("1", "hotelAdmin", password, roles);
         mongoTemplate.save(admin);
+
+        String passwordUser = passwordEncoder.encode("123");
+        Set<Role> roleUser = new HashSet<>(Collections.singletonList(Role.USER));
+        User user = new User("2", "hotelUser", passwordUser, roleUser);
+        mongoTemplate.save(user);
 
         return mongoTemplate;
     }

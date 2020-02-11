@@ -1,9 +1,9 @@
 package by.encata.gulis.hotel.integration.controller;
 
 import by.encata.gulis.hotel.domain.Schedule;
-import by.encata.gulis.hotel.repository.UserRepo;
-import by.encata.gulis.hotel.service.UserService;
+import by.encata.gulis.hotel.service.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,32 +31,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource("/application-test.properties")
 public class HotelControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
-    private UserService userService;
+    private ScheduleService scheduleService;
 
     @Before
     public void setUp(){
+        scheduleService.deleteAll();
 
+        List<Schedule> scheduleList = new ArrayList<>();
+        scheduleList.add(new Schedule(DayOfWeek.MONDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
+        scheduleList.add(new Schedule(DayOfWeek.TUESDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
+        scheduleList.add(new Schedule(DayOfWeek.WEDNESDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
+        scheduleList.add(new Schedule(DayOfWeek.THURSDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
+        scheduleList.add(new Schedule(DayOfWeek.FRIDAY, LocalTime.of(11, 0).toString(), LocalTime.of(18, 0).toString()));
+        scheduleService.saveScheduleList(scheduleList);
     }
 
 
-//    @After
-//    public void clean(){
-//        EntitiesForTestCases entities = new EntitiesForTestCases();
-//        entities.clearDb();
-//    }
+    @After
+    public void clean(){
+        scheduleService.deleteAll();
+    }
 
     @Test
-    @WithUserDetails("hotelAdminTest")
+    @WithUserDetails("hotelAdmin")
     public void testSetHotelScheduleByDayMonday() throws Exception {
+        scheduleService.deleteAll();
+
         Schedule schedule = new Schedule();
         schedule.setDay(DayOfWeek.MONDAY);
         schedule.setOpenTime(LocalTime.of(9, 0).toString());
@@ -85,6 +93,8 @@ public class HotelControllerIT {
     @Test
     @WithUserDetails("hotelAdmin")
     public void testSetHotelScheduleByWeek() throws Exception {
+        scheduleService.deleteAll();
+
         List<Schedule> scheduleList = new ArrayList<>();
         scheduleList.add(new Schedule(DayOfWeek.MONDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
         scheduleList.add(new Schedule(DayOfWeek.TUESDAY, LocalTime.of(9, 0).toString(), LocalTime.of(21, 0).toString()));
