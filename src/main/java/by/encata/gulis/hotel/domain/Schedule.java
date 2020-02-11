@@ -3,9 +3,8 @@ package by.encata.gulis.hotel.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 
 @Document(collection = "schedule")
 public class Schedule {
@@ -13,15 +12,16 @@ public class Schedule {
     @Id
     private DayOfWeek day;
 
-    @NotBlank
-    private LocalTime openTime;
-    @NotBlank
-    private LocalTime closeTime;
+    @NotNull
+    private String openTime;
+
+    @NotNull
+    private String closeTime;
 
     public Schedule() {
     }
 
-    public Schedule(DayOfWeek day, @NotBlank LocalTime openTime, @NotBlank LocalTime closeTime) {
+    public Schedule(DayOfWeek day, @NotNull String openTime, @NotNull String closeTime) {
         this.day = day;
         this.openTime = openTime;
         this.closeTime = closeTime;
@@ -35,19 +35,19 @@ public class Schedule {
         this.day = day;
     }
 
-    public LocalTime getOpenTime() {
+    public String getOpenTime() {
         return openTime;
     }
 
-    public void setOpenTime(LocalTime openTime) {
+    public void setOpenTime(String openTime) {
         this.openTime = openTime;
     }
 
-    public LocalTime getCloseTime() {
+    public String getCloseTime() {
         return closeTime;
     }
 
-    public void setCloseTime(LocalTime closeTime) {
+    public void setCloseTime(String closeTime) {
         this.closeTime = closeTime;
     }
 }

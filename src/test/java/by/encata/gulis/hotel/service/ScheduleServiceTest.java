@@ -15,7 +15,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.Optional;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -28,10 +27,10 @@ public class ScheduleServiceTest {
     private ScheduleRepo scheduleRepo;
 
     @Test
-    public void saveSchedule() {
+    public void saveScheduleTest() {
         Schedule schedule = new Schedule();
-        schedule.setOpenTime(LocalTime.of(8,0));
-        schedule.setCloseTime(LocalTime.of(20,30));
+        schedule.setOpenTime(LocalTime.of(8,0).toString());
+        schedule.setCloseTime(LocalTime.of(20,30).toString());
 
         scheduleService.saveSchedule(schedule);
 
@@ -42,8 +41,8 @@ public class ScheduleServiceTest {
     @Test(expected = InvalidScheduleTimeException.class)
     public void saveScheduleInvalidScheduleTimeTest() {
         Schedule schedule = new Schedule();
-        schedule.setOpenTime(LocalTime.of(20,30));
-        schedule.setCloseTime(LocalTime.of(8,0));
+        schedule.setOpenTime(LocalTime.of(20,0).toString());
+        schedule.setCloseTime(LocalTime.of(8,30).toString());
 
         scheduleService.saveSchedule(schedule);
 
@@ -53,13 +52,13 @@ public class ScheduleServiceTest {
     @Test
     public void getScheduleByDayTest() {
 
-        Mockito.doReturn(Optional.of(new Schedule()))
-                .when(scheduleRepo)
-                .findById(DayOfWeek.MONDAY);
+        Mockito
+                .when(scheduleRepo.findById(DayOfWeek.MONDAY))
+                .thenReturn(java.util.Optional.of(new Schedule()));
 
         scheduleService.getScheduleByDay(DayOfWeek.MONDAY);
 
-        Mockito.verify(scheduleRepo, Mockito.times(1)).findById(ArgumentMatchers.any(DayOfWeek.class));
+        Mockito.verify(scheduleRepo, Mockito.times(1)).findById(DayOfWeek.MONDAY);
     }
 
     @Test(expected = ScheduleNotFoundException.class)
@@ -76,5 +75,13 @@ public class ScheduleServiceTest {
         scheduleService.getAllSchedule();
 
         Mockito.verify(scheduleRepo, Mockito.times(1)).findAll();
+    }
+
+    @Test
+    public void deleteAllScheduleTest() {
+
+        scheduleService.deleteAll();
+
+        Mockito.verify(scheduleRepo, Mockito.times(1)).deleteAll();
     }
 }

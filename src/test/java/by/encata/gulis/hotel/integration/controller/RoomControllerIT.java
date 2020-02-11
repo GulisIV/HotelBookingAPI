@@ -1,0 +1,257 @@
+package by.encata.gulis.hotel.integration.controller;
+
+import by.encata.gulis.hotel.domain.Reservation;
+import by.encata.gulis.hotel.domain.Room;
+import by.encata.gulis.hotel.domain.RoomBreak;
+import by.encata.gulis.hotel.domain.dto.ReservationDto;
+import by.encata.gulis.hotel.service.RoomService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+public class RoomControllerIT {
+
+    @Autowired
+    private RoomService roomService;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void getRoom() throws Exception {
+        mockMvc.perform(get("/room/1")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(1L))
+                .andExpect(jsonPath("$.price").value(BigDecimal.valueOf(100)));
+    }
+
+    @Test
+    @WithUserDetails("hotelAdmin")
+    public void addRoomNumberOne() throws Exception {
+        Room room1 = new Room();
+        room1.setNumber(1L);
+        room1.setNumberOfBeds(1);
+        room1.setPrice(BigDecimal.valueOf(100));
+
+        String roomStr = new ObjectMapper().writeValueAsString(room1);
+
+        mockMvc.perform(post("/room/add").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(roomStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(1L))
+                .andExpect(jsonPath("$.numberOfBeds").value(1))
+                .andExpect(jsonPath("$.price").value(BigDecimal.valueOf(100)));
+    }
+
+    @Test
+    @WithUserDetails("hotelAdmin")
+    public void addRoomNumberTwo() throws Exception {
+        Room room2 = new Room();
+        room2.setNumber(2L);
+        room2.setNumberOfBeds(2);
+        room2.setPrice(BigDecimal.valueOf(200));
+
+        String roomStr = new ObjectMapper().writeValueAsString(room2);
+
+        mockMvc.perform(post("/room/add").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(roomStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.number").value(2L))
+                .andExpect(jsonPath("$.numberOfBeds").value(2))
+                .andExpect(jsonPath("$.price").value(BigDecimal.valueOf(200)));
+    }
+
+    @Test
+    @WithUserDetails("hotelAdmin")
+    public void deleteRoom() throws Exception {
+        Room room3 = new Room();
+        room3.setNumber(3L);
+        room3.setNumberOfBeds(3);
+        room3.setPrice(BigDecimal.valueOf(300));
+        roomService.addRoom(room3);
+
+        mockMvc.perform(delete("/room/{number}/delete", 3L).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(String.valueOf(3L)));
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void getAllRooms() throws Exception {
+        mockMvc.perform(get("/room/all")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].number").value(String.valueOf(1L)))
+                .andExpect(jsonPath("$[0].numberOfBeds").value(String.valueOf(1)))
+                .andExpect(jsonPath("$[1].number").value(String.valueOf(2L)))
+                .andExpect(jsonPath("$[1].numberOfBeds").value(String.valueOf(2)));
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void addReservationForRoomOneMondaySuccess() throws Exception {
+        ReservationDto reservationDto = new ReservationDto();
+        reservationDto.setRoomNumber(1L);
+        reservationDto.setReservation(new Reservation(DayOfWeek.of(1), LocalTime.of(10, 40).toString(), LocalTime.of(12, 0).toString()));
+
+
+        String reservationStr = new ObjectMapper().writeValueAsString(reservationDto);
+
+        mockMvc.perform(post("/room/reserve").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reservationStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void addReservationForRoomOneMondayFail() throws Exception {
+        ReservationDto reservationDto = new ReservationDto();
+        reservationDto.setRoomNumber(1L);
+        reservationDto.setReservation(new Reservation(DayOfWeek.of(1), LocalTime.of(8, 30).toString(), LocalTime.of(12, 0).toString()));
+
+
+        String reservationStr = new ObjectMapper().writeValueAsString(reservationDto);
+
+        mockMvc.perform(post("/room/reserve").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reservationStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("Room is booked this time!"));
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void addReservationForRoomOneTuesdayFail() throws Exception {
+        ReservationDto reservationDto = new ReservationDto();
+        reservationDto.setRoomNumber(1L);
+        reservationDto.setReservation(new Reservation(DayOfWeek.of(2), LocalTime.of(12, 30).toString(), LocalTime.of(14, 0).toString()));
+
+
+        String reservationStr = new ObjectMapper().writeValueAsString(reservationDto);
+
+        mockMvc.perform(post("/room/reserve").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(reservationStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("Reservation crossing room breaks!"));
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void findAvailableRoomsByTimeOne() throws Exception {
+
+        String start = LocalTime.of(9, 0).toString();
+        String end = LocalTime.of(12, 0).toString();
+
+        mockMvc.perform(get("/room/search/{day}", 1)
+                .param("from", start)
+                .param("to", end)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].number").value(1L))
+                .andExpect(jsonPath("$[0].numberOfBeds").value(1));
+    }
+
+    @Test
+    @WithUserDetails("hotelUser")
+    public void findAvailableRoomsByTimeTwo() throws Exception {
+
+        String start = LocalTime.of(14, 0).toString();
+        String end = LocalTime.of(18, 0).toString();
+
+        mockMvc.perform(get("/room/search/{day}", 5)
+                .param("from", start)
+                .param("to", end)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].number").value(2L))
+                .andExpect(jsonPath("$[0].numberOfBeds").value(2));
+    }
+
+    @Test
+    @WithUserDetails("hotelAdmin")
+    public void setRoomOneBreaks() throws Exception {
+        List<RoomBreak> breaksForRoomOne = new ArrayList<>();
+        breaksForRoomOne.add(new RoomBreak(DayOfWeek.MONDAY, LocalTime.of(12, 0).toString(), LocalTime.of(13, 0).toString()));
+        breaksForRoomOne.add(new RoomBreak(DayOfWeek.TUESDAY, LocalTime.of(12, 0).toString(), LocalTime.of(13, 0).toString()));
+        breaksForRoomOne.add(new RoomBreak(DayOfWeek.WEDNESDAY, LocalTime.of(12, 0).toString(), LocalTime.of(13, 0).toString()));
+        breaksForRoomOne.add(new RoomBreak(DayOfWeek.THURSDAY, LocalTime.of(12, 0).toString(), LocalTime.of(13, 0).toString()));
+        breaksForRoomOne.add(new RoomBreak(DayOfWeek.FRIDAY, LocalTime.of(14, 0).toString(), LocalTime.of(15, 0).toString()));
+
+        String breakForRoomOneStr = new ObjectMapper().writeValueAsString(breaksForRoomOne);
+
+        mockMvc.perform(post("/room/{number}/breaks", 1L).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(breakForRoomOneStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(breakForRoomOneStr));
+    }
+
+    @Test
+    @WithUserDetails("hotelAdmin")
+    public void addRoomTwoBreaks() throws Exception {
+        List<RoomBreak> breaksForRoomTwo = new ArrayList<>();
+        breaksForRoomTwo.add(new RoomBreak(DayOfWeek.MONDAY, LocalTime.of(11, 0).toString(), LocalTime.of(12, 0).toString()));
+        breaksForRoomTwo.add(new RoomBreak(DayOfWeek.TUESDAY, LocalTime.of(11, 0).toString(), LocalTime.of(12, 0).toString()));
+        breaksForRoomTwo.add(new RoomBreak(DayOfWeek.WEDNESDAY, LocalTime.of(11, 0).toString(), LocalTime.of(12, 0).toString()));
+        breaksForRoomTwo.add(new RoomBreak(DayOfWeek.THURSDAY, LocalTime.of(11, 0).toString(), LocalTime.of(12, 0).toString()));
+        breaksForRoomTwo.add(new RoomBreak(DayOfWeek.FRIDAY, LocalTime.of(13, 0).toString(), LocalTime.of(14, 0).toString()));
+
+        String breakForRoomTwoStr = new ObjectMapper().writeValueAsString(breaksForRoomTwo);
+
+        mockMvc.perform(post("/room/{number}/breaks", 2L).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(breakForRoomTwoStr)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(breakForRoomTwoStr));
+    }
+
+}

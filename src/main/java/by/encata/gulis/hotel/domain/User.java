@@ -3,12 +3,17 @@ package by.encata.gulis.hotel.domain;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.validation.constraints.NotBlank;
-import java.time.ZoneId;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Document(collection = "user")
-public class User {
+public class User implements UserDetails {
 
     @Id
     private String id;
@@ -19,12 +24,9 @@ public class User {
     @NotBlank
     private String password;
 
-    private String role;
+    private Set<Role> roles = new HashSet<>();
 
-    private ZoneId userZoneId;
-
-    public User(){
-
+    public User() {
     }
 
     public String getId() {
@@ -51,19 +53,55 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
-    public ZoneId getUserZoneId() {
-        return userZoneId;
+    public void setAdmin(Boolean bool) {
+        if (bool) {
+            roles.add(Role.ADMIN);
+        }
     }
 
-    public void setUserZoneId(ZoneId userZoneId) {
-        this.userZoneId = userZoneId;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getRoles();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return getId().equals(user.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
     }
 }

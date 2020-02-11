@@ -11,9 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/hotel")
-//@PreAuthorize("hasAuthority('USER')")
-@PreAuthorize("hasAuthority('ADMIN')")
-////@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('USER')")
 public class HotelController {
 
 
@@ -29,15 +27,24 @@ public class HotelController {
     }
 
     @GetMapping ("/schedule/{day}")
-    public Schedule setHotelWorkTimeByDay(@PathVariable DayOfWeek day) {
-        return scheduleService.getScheduleByDay(day);
+    public Schedule getHotelScheduleByDay(@PathVariable Integer day) {
+        return scheduleService.getScheduleByDay(DayOfWeek.of(day));
     }
 
     @PostMapping("/schedule/set")
-    public Schedule setHotelWorkTimeByDay(@Valid Schedule schedule) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Schedule setHotelScheduleByDay(@Valid @RequestBody Schedule schedule) {
         scheduleService.saveSchedule(schedule);
         return schedule;
     }
+
+    @PostMapping("/schedule/set_week")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<Schedule> setHotelScheduleByWeek(@Valid @RequestBody List<Schedule> scheduleList) {
+        scheduleService.saveScheduleList(scheduleList);
+        return scheduleList;
+    }
+
 
 
 }

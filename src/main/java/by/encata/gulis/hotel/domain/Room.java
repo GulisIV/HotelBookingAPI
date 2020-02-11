@@ -5,15 +5,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "rooms")
 public class Room {
 
     @Id
-    private String id;
-
-    @NotNull
     private Long number;
 
     @NotNull
@@ -22,17 +20,11 @@ public class Room {
     @NotNull
     private BigDecimal price;
 
-    private List<Reservation> reservations;
+    private List<Reservation> reservations = new ArrayList<>();
+
+    private List<RoomBreak> roomBreaks = new ArrayList<>();
 
     public Room() {
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public Long getNumber() {
@@ -67,5 +59,11 @@ public class Room {
         this.reservations = reservations;
     }
 
+    public List<RoomBreak> getRoomBreaks() {
+        return roomBreaks;
+    }
 
+    public void setRoomBreaks(List<RoomBreak> roomBreaks) {
+        this.roomBreaks = roomBreaks;
+    }
 }

@@ -1,19 +1,28 @@
 package by.encata.gulis.hotel.domain;
 
+import javax.validation.constraints.NotNull;
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 
 public class Reservation {
 
     private String userId;
 
-/*    private LocalDateTime checkIn;
-    private LocalDateTime checkOut;*/
+    @NotNull
     private DayOfWeek day;
-    private LocalTime checkIn;
-    private LocalTime checkOut;
+
+    @NotNull
+    private String checkIn;
+
+    @NotNull
+    private String checkOut;
 
     public Reservation() {
+    }
+
+    public Reservation(@NotNull DayOfWeek day, @NotNull String checkIn, @NotNull String checkOut) {
+        this.day = day;
+        this.checkIn = checkIn;
+        this.checkOut = checkOut;
     }
 
     public String getUserId() {
@@ -32,19 +41,19 @@ public class Reservation {
         this.day = day;
     }
 
-    public LocalTime getCheckIn() {
+    public String getCheckIn() {
         return checkIn;
     }
 
-    public void setCheckIn(LocalTime checkIn) {
+    public void setCheckIn(String checkIn) {
         this.checkIn = checkIn;
     }
 
-    public LocalTime getCheckOut() {
+    public String getCheckOut() {
         return checkOut;
     }
 
-    public void setCheckOut(LocalTime checkOut) {
+    public void setCheckOut(String checkOut) {
         this.checkOut = checkOut;
     }
 }
