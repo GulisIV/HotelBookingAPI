@@ -1,12 +1,9 @@
-3) Spring security configuration
-4) MVC configuration
-5) All entity validation
-7) Configure exceptions
+What to do with previous reservations when hotel work time is changed?
+Should we delete them or inform users somehow?
 
-What to do with previous reservations when hotel work time is changed? Should we delete them or inform users somehow?
+As idea:
+do some priority of reservation (HIGH, MIDDLE, LOW).
+HIGH for RoomBreaks;
+MIDDLE for ADMIN (if he want to book room for special person it will override LOW priority reservations)
+LOW for USERs
 
-User choose time in hotel timeZone, not in his timeZone!
-
-Login page? Spring MVC configure is enough?
-
-Add integration test to see all Beans

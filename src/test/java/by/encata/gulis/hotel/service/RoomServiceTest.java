@@ -12,7 +12,6 @@ import by.encata.gulis.hotel.exception.roomBreak.InvalidRoomBreakTimeException;
 import by.encata.gulis.hotel.repository.RoomRepo;
 import by.encata.gulis.hotel.repository.ScheduleRepo;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
@@ -42,13 +41,6 @@ public class RoomServiceTest {
 
     @MockBean
     private ScheduleRepo scheduleRepo;
-
-    private Schedule schedule;
-
-    @Before
-    public void setUp(){
-
-    }
 
     @Test
     public void addRoomTest() {
